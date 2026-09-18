@@ -32,10 +32,19 @@ void init_heap() {
     head->free = true;
     head->next = NULL;
     head->prev = NULL;
-    head->size = HEAP_SIZE - sizeof(Block);
+    head->size = HEAP_SIZE - sizeof(Block); 
 }
 
-void allocate(size_t size, Block* head) {
+//Splits the free heap by the size requested by the user
+void split_free_heap_block(Block* block, size_t size) {
+    //Starts the new block after the end of the current block
+    //Adds the size of the requested block to occupy the block's bytes
+    Block* new_block = (Block*)((char*)(block + 1) + size);
+
+}
+
+//Allocates the memory that the user requested
+void allocate(size_t size, Block *head) {
     if (size == 0) return NULL;
 
     if (!head) init_heap();
@@ -43,7 +52,17 @@ void allocate(size_t size, Block* head) {
     //Makes sure the size is aligned
     size = align(size);
 
+    //Makes the current node the head of the linked list
+    Block *current = head;
 
+    while(current->next != NULL) {
+        if (current->free == true && current->size >= size) {
+            split_free_heap_block(current, size);
+            current->free = false;
+        }
+
+        current = current->next;
+    }   
 
     
 
