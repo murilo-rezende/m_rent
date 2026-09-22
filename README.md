@@ -1,11 +1,11 @@
 # m_rent
 
-`m_rent` is a custom memory allocator built from scratch in C. Similarly to malloc() and free(), m_rent features allocate() and deallocate().
+`m_rent` is a free-list memory allocator built from scratch in C. Similarly to malloc() and free(), m_rent features allocate() and deallocate().
 
 
 ## Overview
 
-Instead of relying on the operating system's memory manager, `m_rent` reserves one large static byte array (1 MiB by default) and manages it manually using a **linked list of blocks**, each with metadata tracking whether it's free or in use.
+`m_rent` is a free-list memory allocator that keeps track of free blocks in the heap using a **linked list of blocks**.
 
 ## Features
 
