@@ -1,6 +1,6 @@
 # m_rent
 
-`m_rent` is a free-list memory allocator built from scratch in C. Similarly to malloc() and free(), m_rent features allocate() and deallocate().
+`m_rent` is a memory allocator built from scratch in C.
 
 
 ## Overview
@@ -64,7 +64,7 @@ deallocate(a);
 
 ## Status
 
-Work in progress — a learning project for understanding how memory allocators work under the hood (alignment, header/metadata layout, free-list management, splitting, and coalescing).
+Work in progress...
 
 ### Current limitations
 
