@@ -5,7 +5,7 @@
 
 ## Overview
 
-`m_rent` is a free-list memory allocator that keeps track of free blocks in the heap using a **linked list of blocks**.
+`m_rent` is a free memory list allocator that keeps track of free blocks in the heap using a **linked list of blocks**.
 
 ## Features
 
