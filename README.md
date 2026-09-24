@@ -13,29 +13,7 @@
 - **First-fit allocation** — walks the block list and hands out the first free block large enough to satisfy a request.
 - **Block merging (coalescing)** — when memory is freed, adjacent free blocks (both forward and backward in the list) are merged back into a single larger block, reducing fragmentation.
 - **Doubly linked block list** — each block tracks both `next` and `prev`, enabling merging in both directions.
-
-## How it works
-
-Each block of memory is preceded by a small header:
-
-```c
-typedef struct Block {
-    bool free;
-    size_t size;
-    struct Block *next;
-    struct Block *prev;
-} Block;
-```
-
-Memory is laid out as a chain of these blocks across the simulated heap:
-
-```
-[header][data][header][data][header][data]...
-```
-
-- `allocate(size)` rounds `size` up to a word boundary, searches the block list for a free block big enough, splits it if there's meaningful space left over, and returns a pointer to the usable data region (just past the header).
-- `deallocate(ptr)` recovers the block header from `ptr` (it sits immediately before the data), marks the block free, and attempts to merge it with its free neighbors.
-
+- 
 ## Files
 
 | File | Purpose |
