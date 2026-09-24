@@ -5,19 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//Sets the HEAP_SIZE as 1 MiB
-#define HEAP_SIZE (1024 * 1024)
-
-//Rounds up n to the next multiple of bytes
-//It guarantees that every block's size is a multiple of the pointer size
-static inline size_t align(size_t n) {
-    return (n + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
-}
-
-//Aligns the memory address that the compiler is gonna use to a multiple of 8
-//Creates an array to represent the heap
-//Creates a char to represent exactly 1 byte (8 bits)
-static alignas(sizeof(void*)) char heap[HEAP_SIZE];
+//Rounds up to a power of 2 number
+#define ALIGN_POW2(n) ((n + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 
 //Keeps track of the size of the header of each block
 static size_t HEADER_SIZE;
@@ -25,21 +14,20 @@ static size_t HEADER_SIZE;
 //Initialize the head of the free memory linked list to NULL
 Block *free_list_head = NULL;
 
-//Inits the head of the free memory linked list
-Block *init_heap() {
-    Block *head = (Block *) heap;
+//Inits the heap of free memory
+bool init_heap(size_t heap_size) {
+    if (heap) return false;
+    
+    //Align the data type and the heap size
+    size_t alignment = alignof(void*);
+    size_t aligned_heap_size = ALIGN_POW2(heap_size);
 
-    //Aligns the size of the header to a multiple of 8
-    HEADER_SIZE = align(sizeof(Block));
+    heap = aligned_alloc(alignment, aligned_heap_size);
 
-    head->free = true;
-    head->next = NULL;
-    head->prev = NULL;
-
-    //Sets the free size avaiable on the heap excluding the metadata of the header
-    head->size = HEAP_SIZE - HEADER_SIZE; 
-
-    return head;
+    if (!heap) return false;
+    
+    //TODO
+    //Create Block
 }
 
 //Creates a new block by splitting the free heap by the size requested by the user
@@ -87,7 +75,7 @@ void *allocate(size_t size) {
     if (!free_list_head) free_list_head = init_heap();
 
     //Makes sure the size is aligned
-    size = align(size);
+    size = ALIGN_POW2(size);
 
     //Makes the current node is the head of the linked list
     Block *current = free_list_head;
