@@ -46,9 +46,3 @@ deallocate(block);
 ## Status
 
 Work in progress...
-
-### Current limitations
-
-- Fixed heap size (1 MiB) — does not grow via `sbrk`/`mmap` if exhausted.
-- First-fit strategy only — no best-fit or other allocation strategies implemented.
-- Not thread-safe.
