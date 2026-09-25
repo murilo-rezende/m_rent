@@ -35,9 +35,12 @@ gcc m_rent.c main.c -o m_rent_test
 #include "m_rent.h"
 
 int *a = (int *) allocate(sizeof(int));
-*a = 42;
+*a = 10;
+
+void* block = allocate(MiB(16));
 
 deallocate(a);
+deallocate(block);
 ```
 
 ## Status
