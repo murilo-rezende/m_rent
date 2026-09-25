@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef uint64_t u64;
 
@@ -18,10 +19,8 @@ typedef struct Block {
     struct Block *prev;
 } Block;
 
-extern Block *free_list_head;
-
 //Initiate the heap size by receiving the desired byte size
-bool init_heap(size_t heap_size);
+bool init_heap(size_t size);
 
 //Allocates size bytes from the heap
 void *allocate(size_t size);

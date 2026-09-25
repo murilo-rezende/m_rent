@@ -8,26 +8,37 @@
 //Rounds up to a power of 2 number
 #define ALIGN_POW2(n) ((n + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 
-//Keeps track of the size of the header of each block
-static size_t HEADER_SIZE;
-
-//Initialize the head of the free memory linked list to NULL
-Block *free_list_head = NULL;
+static char *heap = NULL;
+static size_t header_size = 0;
+static size_t heap_size = 0;
+Block *list_head = NULL;
 
 //Inits the heap of free memory
-bool init_heap(size_t heap_size) {
+bool init_heap(size_t size) {
     if (heap) return false;
-    
-    //Align the data type and the heap size
+
+    //Alignment that the heap's starting address must satisfy
     size_t alignment = alignof(void*);
-    size_t aligned_heap_size = ALIGN_POW2(heap_size);
 
+    //Requested heap size, rounded up to the nearest multiple of alignment
+    size_t aligned_heap_size = ALIGN_POW2(size);
+
+    //Reservess aligned_heap_size bytes of memory
+    //while makes sure that the returned address is a multiple of alignment
     heap = aligned_alloc(alignment, aligned_heap_size);
-
-    if (!heap) return false;
     
-    //TODO
-    //Create Block
+    if (!heap) return false;
+
+    heap_size = aligned_heap_size;
+    header_size = ALIGN_POW2(sizeof(Block));
+
+    Block *head = (Block *)heap;
+    head->free = true;
+    head->next = NULL;
+    head->prev = NULL;
+    head->size = heap_size - header_size;
+    list_head = head;
+    return true;
 }
 
 //Creates a new block by splitting the free heap by the size requested by the user
@@ -36,7 +47,7 @@ void split_free_heap_block(Block *block, size_t size) {
     //Adds the size of the requested block to occupy the block's bytes
     Block* new_block = (Block*)((char*)(block + 1) + size);
 
-    new_block->size = block->size - size - HEADER_SIZE;
+    new_block->size = block->size - size - header_size;
     new_block->free = true;
     new_block->next = block->next;
     new_block->prev = block;
@@ -54,14 +65,14 @@ void split_free_heap_block(Block *block, size_t size) {
 void merge_free_heap_blocks(Block *block) {
     //Merges the current block with the next block if it's free
     if (block->next && block->next->free) {
-        block->size += block->next->size + HEADER_SIZE;
+        block->size += block->next->size + header_size;
         block->next = block->next->next;
         if (block->next) block->next->prev = block;
     }
 
     //Merges the current block with the previous block if it's free
     if (block->prev && block->prev->free) {
-        block->prev->size += block->size + HEADER_SIZE;
+        block->prev->size += block->size + header_size;
         block->prev->next = block->next;
         if (block->prev->next) block->prev->next->prev = block->prev;
     }
@@ -72,13 +83,13 @@ void *allocate(size_t size) {
     if (size == 0) return NULL;
 
     //If the free list head is NULL, it initializes the heap
-    if (!free_list_head) free_list_head = init_heap();
+    if (!list_head) return NULL;
 
     //Makes sure the size is aligned
     size = ALIGN_POW2(size);
 
     //Makes the current node is the head of the linked list
-    Block *current = free_list_head;
+    Block *current = list_head;
 
     //Iterates through the linked list to find a free block that is large enough to accommodate the requested size
     while(current) {
