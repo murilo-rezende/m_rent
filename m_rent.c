@@ -5,23 +5,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//Rounds up to a power of 2 number
-#define ALIGN_POW2(n) ((n + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
+//Rounds up to the next value that is a multiple of sizeof(void*)
+#define ALIGN_UP(n) ((n + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 
 static char *heap = NULL;
 static size_t header_size = 0;
 static size_t heap_size = 0;
-Block *list_head = NULL;
+static MemBlock *list_head = NULL;
 
 //Inits the heap of free memory
-bool init_heap(size_t size) {
+bool m_rent_init(size_t size) {
     if (heap) return false;
 
     //Alignment that the heap's starting address must satisfy
     size_t alignment = alignof(void*);
 
     //Requested heap size, rounded up to the nearest multiple of alignment
-    size_t aligned_heap_size = ALIGN_POW2(size);
+    size_t aligned_heap_size = ALIGN_UP(size);
 
     //Reservess aligned_heap_size bytes of memory
     //while makes sure that the returned address is a multiple of alignment
@@ -30,9 +30,9 @@ bool init_heap(size_t size) {
     if (!heap) return false;
 
     heap_size = aligned_heap_size;
-    header_size = ALIGN_POW2(sizeof(Block));
+    header_size = ALIGN_UP(sizeof(MemBlock));
 
-    Block *head = (Block *)heap;
+    MemBlock *head = (MemBlock *)heap;
     head->free = true;
     head->next = NULL;
     head->prev = NULL;
@@ -42,10 +42,10 @@ bool init_heap(size_t size) {
 }
 
 //Creates a new block by splitting the free heap by the size requested by the user
-void split_free_heap_block(Block *block, size_t size) {
+void split_free_blocks(MemBlock *block, size_t size) {
     //Starts the new block after the end of the current block
     //Adds the size of the requested block to occupy the block's bytes
-    Block* new_block = (Block*)((char*)(block + 1) + size);
+    MemBlock* new_block = (MemBlock*)((char*)(block + 1) + size);
 
     new_block->size = block->size - size - header_size;
     new_block->free = true;
@@ -62,14 +62,13 @@ void split_free_heap_block(Block *block, size_t size) {
 }
 
 //Merges the current block with the next and previous blocks if they are free
-void merge_free_heap_blocks(Block *block) {
+void merge_free_blocks(MemBlock *block) {
     //Merges the current block with the next block if it's free
     if (block->next && block->next->free) {
         block->size += block->next->size + header_size;
         block->next = block->next->next;
         if (block->next) block->next->prev = block;
-    }
-
+    }  
     //Merges the current block with the previous block if it's free
     if (block->prev && block->prev->free) {
         block->prev->size += block->size + header_size;
@@ -79,22 +78,22 @@ void merge_free_heap_blocks(Block *block) {
 }
 
 //Allocates the memory that the user requested
-void *allocate(size_t size) {
+void *m_rent_alloc(size_t size) {
     if (size == 0) return NULL;
 
     //If the free list head is NULL, it initializes the heap
     if (!list_head) return NULL;
 
     //Makes sure the size is aligned
-    size = ALIGN_POW2(size);
+    size = ALIGN_UP(size);
 
     //Makes the current node is the head of the linked list
-    Block *current = list_head;
+    MemBlock *current = list_head;
 
     //Iterates through the linked list to find a free block that is large enough to accommodate the requested size
     while(current) {
         if (current->free == true && current->size >= size) {
-            split_free_heap_block(current, size);
+            split_free_blocks(current, size);
 
             //Marks the block as allocated
             current->free = false;
@@ -106,15 +105,16 @@ void *allocate(size_t size) {
     return NULL; //No free block found
 }
 
-void deallocate(void *ptr) {
+void m_rent_dealloc(void *ptr) {
     if (!ptr) return;
 
     //Get the block header from the pointer
-    Block *block = (Block *)ptr - 1;
+    MemBlock *block = (MemBlock *)ptr - 1;
 
     //Frees the memory within the block
     block->free = true;
 
-    ////Merges the current block with the next and previous blocks if they are free
-    merge_free_heap_blocks(block);
+    //Merges the current block with the next and previous blocks if they are free
+    merge_free_blocks(block);
 }
+
